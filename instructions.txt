@@ -1,2 +1,9 @@
-RUN chmod +x ./start.sh
+#RUN  to make the shell script executable
+
+chmod +x ./start.sh
+
+
+#to start the tool
+./start.sh
+
 

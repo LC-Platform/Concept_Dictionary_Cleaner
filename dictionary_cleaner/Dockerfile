@@ -1,17 +1,23 @@
-# Dockerfile
-
-FROM node:20-alpine
+# Stage 1: Build the app
+FROM node:18 AS build
 
 WORKDIR /app
 
+# Copy package.json and install deps first for caching
 COPY package*.json ./
-
 RUN npm install
 
+# Copy rest of the app and build
 COPY . .
+RUN npm run build
 
-EXPOSE 3000
+# Stage 2: Serve with nginx
+FROM nginx:alpine
 
-RUN chmod +x ./start.sh
+# Copy built files from previous stage
+COPY --from=build /app/build /usr/share/nginx/html
 
-CMD ["./start.sh"]
+
+# Expose port and start server
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

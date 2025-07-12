@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { 
+  colors, typography, spacing, shadows, 
+  buttonStyles, inputStyles, tableStyles, cardStyles 
+} from '../styles/styles';
 
 const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(null);
@@ -7,12 +11,11 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
   const [relatedConcepts, setRelatedConcepts] = useState([]);
   const [validationResult, setValidationResult] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // NEW - search controls
   const [searchType, setSearchType] = useState("hindi");
   const [searchLabel, setSearchLabel] = useState("");
 
   useEffect(() => {
+    setLoading(true);
     axios.get(`https://canvas.iiit.ac.in/lc/api/concepts/getconceptbyid/${conceptId}`)
       .then(res => {
         const concept = res.data.concept;
@@ -34,7 +37,15 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
 
         axios.get(`https://canvas.iiit.ac.in/lc/api/concepts/getconcepts/${baseConceptLabel}`)
           .then(res => {
-            const conceptsArray = Object.values(res.data.concepts);
+            const conceptsObj = res.data.concepts || {};
+            const conceptsArray = Object.entries(conceptsObj).map(([key, item]) => ({
+              concept_key: key,
+              concept_id: item.concept_id || "-",
+              concept_label: item.cocnept_label || "-",
+              english_label: item.english_label || "-",
+              hindi_label: item.hindi_label || "-",
+              sanskrit_label: item.sanskrit_label || "-"
+            }));
             setRelatedConcepts(conceptsArray);
           })
           .catch(() => console.warn("No related concepts found."));
@@ -42,7 +53,8 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
       .catch(() => {
         alert("Failed to load concept.");
         onClose();
-      });
+      })
+      .finally(() => setLoading(false));
   }, [conceptId]);
 
   const handleChange = (e) => {
@@ -51,13 +63,15 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoading(true);
     axios.put(`https://canvas.iiit.ac.in/lc/api/concepts/edit/${conceptId}`, formData)
       .then(() => {
         alert("Updated successfully");
         onUpdate(conceptId, formData);
         onClose();
       })
-      .catch(() => alert("Update failed"));
+      .catch(() => alert("Update failed"))
+      .finally(() => setLoading(false));
   };
 
   const handleValidate = (labelType, labelValue) => {
@@ -93,7 +107,6 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
       .finally(() => setLoading(false));
   };
 
-  // NEW - search handler
   const handleSearch = () => {
     if (!searchLabel.trim()) {
       alert("Please enter a label to search.");
@@ -114,12 +127,11 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
     axios.get(url)
       .then(res => {
         const conceptsObj = res.data.concepts || {};
-        // Convert object entries to array, keeping the key as 'concept_key'
         const conceptsArray = Object.entries(conceptsObj).map(([key, item]) => ({
-          concept_key: key,               // keep the key here
+          concept_key: key,
           concept_id: item.concept_id || "-",
-          concept_label: item.concept_label || "-",
-          english_label: item.english_label || "-", // might be missing
+          concept_label: item.cocnept_label || "-",
+          english_label: item.english_label || "-",
           hindi_label: item.hindi_label || "-",
           sanskrit_label: item.sanskrit_label || "-"
         }));
@@ -132,205 +144,311 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
       .finally(() => setLoading(false));
   };
 
-  if (!formData) return <div>Loading...</div>;
+  if (!formData) return (
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '200px',
+      fontSize: typography.fontSize.large
+    }}>
+      Loading concept data...
+    </div>
+  );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', padding: '20px' }}>
-      {/* Edit Form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-
-        {/* Concept Label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <label style={{ fontWeight: 'bold', minWidth: '150px' }}>Concept Label:</label>
-          <input
-            type="text"
-            name="concept_label"
-            value={formData.concept_label}
-            onChange={handleChange}
-          />
-          <button
-            type="button"
-            onClick={() => handleValidate('concept', formData.concept_label)}
+    <div style={{
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      right: '0',
+      bottom: '0',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: '1000',
+      padding: spacing.large
+    }}>
+      <div style={{
+        ...cardStyles.base,
+        width: '90%',
+        maxWidth: '1200px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        padding: spacing.xlarge
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: spacing.large
+        }}>
+          <h2 style={{ ...cardStyles.title, margin: 0 }}>Edit Concept</h2>
+          <button 
+            onClick={onClose}
             style={{
-              padding: '5px 10px',
-              background: '#007bff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer'
+              ...buttonStyles.secondary,
+              padding: `${spacing.small} ${spacing.medium}`,
+              fontSize: typography.fontSize.medium
             }}
           >
-            Validate
+            Close
           </button>
         </div>
+        
+        <form onSubmit={handleSubmit} style={{ marginBottom: spacing.xlarge }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: spacing.large,
+            marginBottom: spacing.large
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              gap: spacing.small
+            }}>
+              <label style={{ 
+                fontWeight: 'bold',
+                color: colors.text 
+              }}>Concept Label:</label>
+              <div style={{ display: 'flex', gap: spacing.small }}>
+                <input
+                  type="text"
+                  name="concept_label"
+                  value={formData.concept_label}
+                  onChange={handleChange}
+                  style={{ ...inputStyles.base, flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleValidate('concept', formData.concept_label)}
+                  disabled={loading}
+                  style={{ ...buttonStyles.secondary, minWidth: '100px' }}
+                >
+                  {loading ? 'Validating...' : 'Validate'}
+                </button>
+              </div>
+            </div>
 
-        {/* Sanskrit Label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <label style={{ fontWeight: 'bold', minWidth: '150px' }}>Sanskrit Label:</label>
-          <input
-            type="text"
-            name="sanskrit_label"
-            value={formData.sanskrit_label}
-            onChange={handleChange}
-          />
-          <button
-            type="button"
-            onClick={() => handleValidate('sanskrit', formData.sanskrit_label)}
-            style={{
-              padding: '5px 10px',
-              background: '#007bff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer'
-            }}
-          >
-            Validate
-          </button>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              gap: spacing.small
+            }}>
+              <label style={{ 
+                fontWeight: 'bold',
+                color: colors.text 
+              }}>Sanskrit Label:</label>
+              <div style={{ display: 'flex', gap: spacing.small }}>
+                <input
+                  type="text"
+                  name="sanskrit_label"
+                  value={formData.sanskrit_label}
+                  onChange={handleChange}
+                  style={{ ...inputStyles.base, flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleValidate('sanskrit', formData.sanskrit_label)}
+                  disabled={loading}
+                  style={{ ...buttonStyles.secondary, minWidth: '100px' }}
+                >
+                  {loading ? 'Validating...' : 'Validate'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              gap: spacing.small
+            }}>
+              <label style={{ 
+                fontWeight: 'bold',
+                color: colors.text 
+              }}>English Label:</label>
+              <div style={{ display: 'flex', gap: spacing.small }}>
+                <input
+                  type="text"
+                  name="english_label"
+                  value={formData.english_label}
+                  onChange={handleChange}
+                  style={{ ...inputStyles.base, flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleValidate('english', formData.english_label)}
+                  disabled={loading}
+                  style={{ ...buttonStyles.secondary, minWidth: '100px' }}
+                >
+                  {loading ? 'Validating...' : 'Validate'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              gap: spacing.small
+            }}>
+              <label style={{ 
+                fontWeight: 'bold',
+                color: colors.text 
+              }}>MRSC:</label>
+              <input
+                type="text"
+                name="mrsc"
+                value={formData.mrsc}
+                readOnly
+                style={{ 
+                  ...inputStyles.base, 
+                  backgroundColor: '#f0f0f0', 
+                  cursor: 'not-allowed' 
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: spacing.medium }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ 
+                ...buttonStyles.primary, 
+                padding: `${spacing.medium} ${spacing.large}`,
+                fontSize: typography.fontSize.medium
+              }}
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ 
+                ...buttonStyles.secondary, 
+                padding: `${spacing.medium} ${spacing.large}`,
+                fontSize: typography.fontSize.medium
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+
+        {validationResult && (
+          <div style={{ 
+            marginBottom: spacing.large,
+            padding: spacing.medium,
+            backgroundColor: '#f8f9fa',
+            borderRadius: '4px',
+            borderLeft: `4px solid ${colors.accent}`
+          }}>
+            <h4 style={{ color: colors.primary, marginTop: 0 }}>Validation Result</h4>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: spacing.medium
+            }}>
+              <div>
+                <p style={{ fontWeight: 'bold', margin: 0 }}>Label Type:</p>
+                <p style={{ margin: 0 }}>{validationResult.labelType}</p>
+              </div>
+              <div>
+                <p style={{ fontWeight: 'bold', margin: 0 }}>Label Value:</p>
+                <p style={{ margin: 0 }}>{validationResult.labelValue}</p>
+              </div>
+              <div>
+                <p style={{ fontWeight: 'bold', margin: 0 }}>Message:</p>
+                <p style={{ margin: 0 }}>{validationResult.message}</p>
+              </div>
+              <div>
+                <p style={{ fontWeight: 'bold', margin: 0 }}>Suggested Label:</p>
+                <p style={{ margin: 0 }}>{validationResult.suggested_label}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginBottom: spacing.large }}>
+          <h3 style={{ color: colors.primary }}>Search Concepts by Label</h3>
+          <div style={{ 
+            display: 'flex', 
+            gap: spacing.medium, 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            marginBottom: spacing.medium
+          }}>
+            <select 
+              value={searchType} 
+              onChange={e => setSearchType(e.target.value)}
+              style={{ ...inputStyles.base, minWidth: '120px' }}
+            >
+              <option value="hindi">Hindi</option>
+              <option value="sanskrit">Sanskrit</option>
+              <option value="english">English</option>
+            </select>
+            <input
+              type="text"
+              value={searchLabel}
+              onChange={e => setSearchLabel(e.target.value)}
+              placeholder="Enter label value..."
+              style={{ ...inputStyles.base, flex: 1, minWidth: '200px' }}
+            />
+            <button
+              onClick={handleSearch}
+              disabled={loading}
+              style={{ ...buttonStyles.primary, minWidth: '100px' }}
+            >
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
         </div>
 
-        {/* English Label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <label style={{ fontWeight: 'bold', minWidth: '150px' }}>English Label:</label>
-          <input
-            type="text"
-            name="english_label"
-            value={formData.english_label}
-            onChange={handleChange}
-          />
-          <button
-            type="button"
-            onClick={() => handleValidate('english', formData.english_label)}
-            style={{
-              padding: '5px 10px',
-              background: '#007bff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer'
-            }}
-          >
-            Validate
-          </button>
-        </div>
-
-        {/* MRSC */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <label style={{ fontWeight: 'bold', minWidth: '150px' }}>MRSC:</label>
-          <input
-            type="text"
-            name="mrsc"
-            value={formData.mrsc}
-            readOnly
-            style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
-          />
-        </div>
-
-        <button
-          type="submit"
-          style={{
-            padding: '10px',
-            marginTop: '10px',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px'
-          }}
-        >
-          Save Changes
-        </button>
-      </form>
-
-      {/* Validation Result */}
-      {validationResult && (
-        <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ddd' }}>
-          <h4>Validation Result</h4>
-          <p><strong>Label Type:</strong> {validationResult.labelType}</p>
-          <p><strong>Label Value:</strong> {validationResult.labelValue}</p>
-          <p><strong>Message:</strong> {validationResult.message}</p>
-          <p><strong>Suggested Label:</strong> {validationResult.suggested_label}</p>
-        </div>
-      )}
-
-      {/* NEW - Search Section */}
-      <div style={{ marginTop: '30px', borderTop: '1px solid #ddd', paddingTop: '20px' }}>
-        <h3>Search Concepts by Label</h3>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <select value={searchType} onChange={e => setSearchType(e.target.value)}>
-            <option value="hindi">Hindi</option>
-            <option value="sanskrit">Sanskrit</option>
-            <option value="english">English</option>
-          </select>
-          <input
-            type="text"
-            value={searchLabel}
-            onChange={e => setSearchLabel(e.target.value)}
-            placeholder="Enter label value..."
-          />
-          <button
-            onClick={handleSearch}
-            style={{
-              padding: '6px 12px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer'
-            }}
-          >
-            Search
-          </button>
-        </div>
+        {relatedConcepts.length > 0 && (
+          <div>
+            <h3 style={{ color: colors.primary }}>Related Concepts</h3>
+            <div style={{ 
+              overflowX: 'auto',
+              maxHeight: '400px',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '4px'
+            }}>
+              <table style={{ 
+                ...tableStyles.base,
+                width: '100%',
+                minWidth: '800px'
+              }}>
+                <thead>
+                  <tr style={tableStyles.header}>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header, width: '15%' }}>Concept ID</th>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header, width: '25%' }}>Concept Label</th>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header, width: '20%' }}>English Label</th>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header, width: '20%' }}>Hindi Label</th>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header, width: '20%' }}>Sanskrit Label</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {relatedConcepts.map((item, index) => (
+                    <tr key={index} style={tableStyles.row}>
+                      <td style={tableStyles.cell}>{item.concept_id}</td>
+                      <td style={tableStyles.cell}>{item.concept_label}</td>
+                      <td style={tableStyles.cell}>
+                        {searchType === "english"
+                          ? item.concept_key
+                          : item.english_label || item.concept_label || "-"}
+                      </td>
+                      <td style={tableStyles.cell}>{item.hindi_label}</td>
+                      <td style={tableStyles.cell}>{item.sanskrit_label}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Related Concepts Table */}
-      {/* Related Concepts Table */}
-{relatedConcepts.length > 0 && (
-  <div style={{ 
-    marginTop: '20px', 
-    overflowX: 'auto',   // horizontal scroll if needed
-    overflowY: 'auto',   // vertical scroll
-    maxWidth: '100%',
-    maxHeight: '300px',  // fixed max height for vertical scroll area
-  }}>
-    <h3>Related Concepts</h3>
-    <table
-      border="1"
-      cellPadding="8"
-      style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        tableLayout: 'fixed' // fix column widths and enable wrapping
-      }}
-    >
-      <thead>
-        <tr>
-          <th style={{ width: '10%' }}>Concept ID</th>
-          <th style={{ width: '25%' }}>Concept Label</th>
-          <th style={{ width: '25%' }}>English Label</th>
-          <th style={{ width: '20%' }}>Hindi Label</th>
-          <th style={{ width: '20%' }}>Sanskrit Label</th>
-        </tr>
-      </thead>
-      <tbody>
-        {relatedConcepts.map((item, index) => (
-          <tr key={index} style={{ wordBreak: 'break-word' }}>
-            <td>{item.concept_id}</td>
-            <td>{item.concept_label}</td>
-            <td>
-              {searchType === "english"
-                ? item.concept_key
-                : item.english_label || item.concept_label || "-"}
-            </td>
-            <td>{item.hindi_label}</td>
-            <td>{item.sanskrit_label}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
-
     </div>
   );
 };

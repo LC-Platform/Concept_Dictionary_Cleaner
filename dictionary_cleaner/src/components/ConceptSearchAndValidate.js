@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { 
+  colors, typography, spacing, shadows, 
+  buttonStyles, inputStyles, tableStyles, cardStyles 
+} from './styles';
 
 const ConceptSearchAndValidate = () => {
   const [searchLabel, setSearchLabel] = useState('');
-  const [searchType, setSearchType] = useState('hindi'); // hindi | sanskrit | english
+  const [searchType, setSearchType] = useState('hindi');
   const [searchResults, setSearchResults] = useState(null);
   const [validationResult, setValidationResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -61,10 +65,19 @@ const ConceptSearchAndValidate = () => {
   };
 
   return (
-    <div style={{ padding: '20px', border: '1px solid #ddd', marginBottom: '30px' }}>
-      <h2>Search & Validate Concepts</h2>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-        <select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
+    <div style={{ ...cardStyles.base, marginBottom: spacing.xlarge }}>
+      <h2 style={{ ...cardStyles.title }}>Search & Validate Concepts</h2>
+      <div style={{ 
+        display: 'flex', 
+        gap: spacing.medium, 
+        marginBottom: spacing.medium,
+        flexWrap: 'wrap' 
+      }}>
+        <select 
+          value={searchType} 
+          onChange={(e) => setSearchType(e.target.value)}
+          style={{ ...inputStyles.base, minWidth: '150px' }}
+        >
           <option value="hindi">Hindi Label</option>
           <option value="sanskrit">Sanskrit Label</option>
           <option value="english">English Label</option>
@@ -74,53 +87,69 @@ const ConceptSearchAndValidate = () => {
           value={searchLabel}
           onChange={(e) => setSearchLabel(e.target.value)}
           placeholder="Enter label..."
-          style={{ flex: 1 }}
+          style={{ ...inputStyles.base, flex: 1, minWidth: '200px' }}
         />
-        <button onClick={handleSearch} disabled={loading}>
+        <button 
+          onClick={handleSearch} 
+          disabled={loading}
+          style={{ ...buttonStyles.primary, minWidth: '100px' }}
+        >
           {loading ? 'Searching...' : 'Search'}
         </button>
-        <button onClick={handleValidate} disabled={loading}>
+        <button 
+          onClick={handleValidate} 
+          disabled={loading}
+          style={{ ...buttonStyles.secondary, minWidth: '100px' }}
+        >
           {loading ? 'Validating...' : 'Validate'}
         </button>
       </div>
 
       {/* Search Results */}
       {searchResults && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>Search Results</h3>
+        <div style={{ marginTop: spacing.large }}>
+          <h3 style={{ color: colors.primary }}>Search Results</h3>
           {searchResults.concepts ? (
-            <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th>Concept ID</th>
-                  <th>Hindi Label</th>
-                  <th>Sanskrit Label</th>
-                  <th>English Label</th>
-                  <th>Concept Label</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.values(searchResults.concepts).map((concept, idx) => (
-                  <tr key={idx}>
-                    <td>{concept.concept_id}</td>
-                    <td>{concept.hindi_label}</td>
-                    <td>{concept.sanskrit_label}</td>
-                    <td>{concept.english_label}</td>
-                    <td>{concept.concept_label || '-'}</td>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={tableStyles.base}>
+                <thead>
+                  <tr style={tableStyles.header}>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Concept ID</th>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Hindi Label</th>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Sanskrit Label</th>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header }}>English Label</th>
+                    <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Concept Label</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {Object.values(searchResults.concepts).map((concept, idx) => (
+                    <tr key={idx} style={tableStyles.row}>
+                      <td style={tableStyles.cell}>{concept.concept_id}</td>
+                      <td style={tableStyles.cell}>{concept.hindi_label}</td>
+                      <td style={tableStyles.cell}>{concept.sanskrit_label}</td>
+                      <td style={tableStyles.cell}>{concept.english_label}</td>
+                      <td style={tableStyles.cell}>{concept.concept_label || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
-            <p>{searchResults.message}</p>
+            <p style={{ color: colors.lightText }}>{searchResults.message}</p>
           )}
         </div>
       )}
 
       {/* Validation Result */}
       {validationResult && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>Validation Result</h3>
+        <div style={{ 
+          marginTop: spacing.large,
+          padding: spacing.medium,
+          backgroundColor: '#f8f9fa',
+          borderRadius: '4px',
+          borderLeft: `4px solid ${colors.accent}`
+        }}>
+          <h3 style={{ color: colors.primary }}>Validation Result</h3>
           <p><strong>Message:</strong> {validationResult.message}</p>
           <p><strong>Suggested Label:</strong> {validationResult.suggested_label}</p>
         </div>

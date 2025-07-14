@@ -16,7 +16,7 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`https://canvas.iiit.ac.in/lc/api/concepts/getconceptbyid/${conceptId}`)
+    axios.get(`http://localhost:5000/api/concepts/getconceptbyid/${conceptId}`)
       .then(res => {
         const concept = res.data.concept;
         setFormData({
@@ -28,14 +28,14 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
         });
 
         const baseConceptLabel = concept.concept_label.split('_')[0];
-        axios.get(`https://canvas.iiit.ac.in/lc/api/concepts/getconcepts/${baseConceptLabel}`)
+        axios.get(`http://localhost:5000/api/concepts/getconcepts/${baseConceptLabel}`)
           .then(res => {
             const labels = Object.keys(res.data.concepts);
             setHindiLabelOptions(labels);
           })
           .catch(() => console.warn("No related Hindi labels found."));
 
-        axios.get(`https://canvas.iiit.ac.in/lc/api/concepts/getconcepts/${baseConceptLabel}`)
+        axios.get(`http://localhost:5000/api/concepts/getconcepts/${baseConceptLabel}`)
           .then(res => {
             const conceptsObj = res.data.concepts || {};
             const conceptsArray = Object.entries(conceptsObj).map(([key, item]) => ({
@@ -64,7 +64,7 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    axios.put(`https://canvas.iiit.ac.in/lc/api/concepts/edit/${conceptId}`, formData)
+    axios.put(`http://localhost:5000/api/concepts/edit/${conceptId}`, formData)
       .then(() => {
         alert("Updated successfully");
         onUpdate(conceptId, formData);
@@ -85,13 +85,13 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
 
     let url = '';
     if (labelType === 'hindi') {
-      url = `https://canvas.iiit.ac.in/lc/api/concepts/validate_hindi_label/${labelValue}`;
+      url = `http://localhost:5000/api/concepts/validate_concept_label/${labelValue}`;
     } else if (labelType === 'sanskrit') {
-      url = `https://canvas.iiit.ac.in/lc/api/concepts/validate_sanskrit_label/${labelValue}`;
+      url = `http://localhost:5000/api/concepts/validate_sanskrit_label/${labelValue}`;
     } else if (labelType === 'english') {
-      url = `https://canvas.iiit.ac.in/lc/api/concepts/getconceptss/${labelValue}`;
+      url = `http://localhost:5000/api/concepts/getconceptss/${labelValue}`;
     } else if (labelType === 'concept') {
-      url = `https://canvas.iiit.ac.in/lc/api/concepts/validate_hindi_label/${labelValue}`;
+      url = `http://localhost:5000/api/concepts/validate_concept_label/${labelValue}`;
     }
 
     axios
@@ -115,11 +115,11 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
 
     let url = "";
     if (searchType === "hindi") {
-      url = `https://canvas.iiit.ac.in/lc/api/concepts/getconcepts/${searchLabel}`;
+      url = `http://localhost:5000/api/concepts/getconcepts/${searchLabel}`;
     } else if (searchType === "sanskrit") {
-      url = `https://canvas.iiit.ac.in/lc/api/concepts/get_sanskrit_concepts/sanskrit/${searchLabel}`;
+      url = `http://localhost:5000/api/concepts/get_sanskrit_concepts/sanskrit/${searchLabel}`;
     } else if (searchType === "english") {
-      url = `https://canvas.iiit.ac.in/lc/api/concepts/getconcepts/english/${searchLabel}`;
+      url = `http://localhost:5000/api/concepts/getconcepts/english/${searchLabel}`;
     }
 
     setLoading(true);

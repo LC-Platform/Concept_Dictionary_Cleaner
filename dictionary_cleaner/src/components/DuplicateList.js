@@ -13,7 +13,7 @@ const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
 
   useEffect(() => {
     if (!duplicates) {
-      axios.get('http://localhost:5000/api/concepts/duplicates')
+      axios.get('https://canvas.iiit.ac.in/lc/api/concepts/duplicates')
         .then(res => setDuplicates(res.data))
         .catch(() => alert("No duplicates found"))
         .finally(() => setLoading(false));
@@ -24,7 +24,7 @@ const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this concept?")) {
-      axios.delete(`http://localhost:5000/api/concepts/delete/${id}`)
+      axios.delete(`https://canvas.iiit.ac.in/lc/api/concepts/delete/${id}`)
         .then(() => {
           const updated = { ...duplicates };
           for (let label in updated) {

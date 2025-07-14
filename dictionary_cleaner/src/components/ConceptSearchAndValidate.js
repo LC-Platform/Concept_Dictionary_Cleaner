@@ -12,7 +12,7 @@ const ConceptSearchAndValidate = () => {
   const [validationResult, setValidationResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const API_BASE = 'http://localhost:5000/api/concepts';
+  const API_BASE = 'https://canvas.iiit.ac.in/lc/api/concepts';
 
   const handleSearch = () => {
     if (!searchLabel.trim()) {

@@ -103,7 +103,7 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
 
     let url = '';
     if (labelType === 'hindi') {
-      url = `https://canvas.iiit.ac.in/lc/api/concepts/validate_concept_label/${labelValue}`;
+      url = `https://canvas.iiit.ac.in/lc/api/concepts/validate_hindi_label/<string:hindi_label>`;
     } else if (labelType === 'sanskrit') {
       url = `https://canvas.iiit.ac.in/lc/api/concepts/validate_sanskrit_label/${labelValue}`;
     } else if (labelType === 'english') {

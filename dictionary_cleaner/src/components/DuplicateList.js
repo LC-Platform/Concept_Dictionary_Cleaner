@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { 
   colors, typography, spacing, shadows, 
@@ -19,6 +19,7 @@ const DuplicateList = ({
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (!duplicates) {
@@ -37,6 +38,42 @@ const DuplicateList = ({
       .catch(() => alert("No duplicates found"))
       .finally(() => setLoading(false));
   };
+
+  const filteredLabels = useMemo(() => {
+    if (!duplicates) return [];
+    
+    const allLabels = Object.keys(duplicates);
+    
+    if (!searchTerm.trim()) return allLabels;
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    return allLabels.filter(label => {
+      // Check if label matches search term
+      if (label.toLowerCase().includes(searchLower)) return true;
+      
+      // Check if any concept in this label group matches the search term
+      return duplicates[label].some(concept => {
+        return (
+          (concept.hindi_label && concept.hindi_label.toLowerCase().includes(searchLower)) ||
+          (concept.sanskrit_label && concept.sanskrit_label.toLowerCase().includes(searchLower)) ||
+          (concept.english_label && concept.english_label.toLowerCase().includes(searchLower)) ||
+          (concept.mrsc && concept.mrsc.toLowerCase().includes(searchLower))
+        );
+      });
+    });
+  }, [duplicates, searchTerm]);
+
+  const totalPages = Math.ceil(filteredLabels.length / ITEMS_PER_PAGE);
+  const currentLabels = filteredLabels.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE, 
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, setCurrentPage]);
 
   const promptUsername = (id) => {
     setPendingDeleteId(id);
@@ -94,19 +131,31 @@ const DuplicateList = ({
   if (loading) return <div style={{ padding: spacing.large }}>Loading...</div>;
   if (!duplicates) return null;
 
-  const allLabels = Object.keys(duplicates);
-  const totalPages = Math.ceil(allLabels.length / ITEMS_PER_PAGE);
-  const currentLabels = allLabels.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE, 
-    currentPage * ITEMS_PER_PAGE
-  );
-
   return (
     <div style={cardStyles.base}>
       <h2 style={cardStyles.title}>Duplicate Concept Labels</h2>
       
-      {currentLabels.length === 0 ? (
-        <p style={{ color: colors.lightText }}>No duplicates found</p>
+      {/* Search Input */}
+      <div style={{ marginBottom: spacing.medium }}>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search duplicates..."
+          style={{ 
+            ...inputStyles.base, 
+            width: '100%',
+            maxWidth: '400px',
+            padding: spacing.small,
+            fontSize: typography.fontSize
+          }}
+        />
+      </div>
+      
+      {filteredLabels.length === 0 ? (
+        <p style={{ color: colors.lightText }}>
+          {searchTerm.trim() ? 'No matching duplicates found' : 'No duplicates found'}
+        </p>
       ) : (
         <>
           {currentLabels.map(label => (

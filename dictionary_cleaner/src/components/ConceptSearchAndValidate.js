@@ -3,7 +3,7 @@ import axios from 'axios';
 import { 
   colors, typography, spacing, shadows, 
   buttonStyles, inputStyles, tableStyles, cardStyles 
-} from './styles';
+} from '../styles/styles';
 
 const ConceptSearchAndValidate = () => {
   const [searchLabel, setSearchLabel] = useState('');

@@ -68,7 +68,7 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
     setShowUsernameModal(true);
   };
 
-  const confirmSubmit = () => {
+   const confirmSubmit = () => {
     if (!username.trim()) {
       alert("Please enter your name");
       return;
@@ -81,12 +81,19 @@ const EditConceptForm = ({ conceptId, onClose, onUpdate }) => {
     })
       .then(() => {
         alert("Updated successfully");
+        // Call onUpdate first to update local state
         onUpdate(conceptId, formData);
-        onClose();
-         // Add this line to refresh the page
-      window.location.reload();
+        // Then fetch fresh data from server
+        return axios.get('https://canvas.iiit.ac.in/lc/api/concepts/duplicates');
       })
-      .catch(() => alert("Update failed"))
+      .then(res => {
+        // Update parent with fresh data
+        onUpdate(conceptId, formData, res.data);
+        onClose();
+      })
+      .catch(() => {
+        alert("Update failed");
+      })
       .finally(() => {
         setLoading(false);
         setShowUsernameModal(false);

@@ -1,141 +1,3 @@
-// import { useEffect, useState } from 'react';
-// import axios from 'axios';
-// import { 
-//   colors, typography, spacing, shadows, 
-//   buttonStyles, inputStyles, tableStyles, cardStyles 
-// } from '../styles/styles';
-
-// const ITEMS_PER_PAGE = 5;
-
-// const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
-//   const [loading, setLoading] = useState(true);
-//   const [currentPage, setCurrentPage] = useState(1);
-
-//   useEffect(() => {
-//     if (!duplicates) {
-//       axios.get('https://canvas.iiit.ac.in/lc/api/concepts/duplicates')
-//         .then(res => setDuplicates(res.data))
-//         .catch(() => alert("No duplicates found"))
-//         .finally(() => setLoading(false));
-//     } else {
-//       setLoading(false);
-//     }
-//   }, [duplicates, setDuplicates]);
-
-//   const handleDelete = (id) => {
-//     if (window.confirm("Are you sure you want to delete this concept?")) {
-//       axios.delete(`https://canvas.iiit.ac.in/lc/api/concepts/delete/${id}`)
-//         .then(() => {
-//           const updated = { ...duplicates };
-//           for (let label in updated) {
-//             updated[label] = updated[label].filter(con => con.concept_id !== id);
-//             if (updated[label].length === 0) {
-//               delete updated[label];
-//             }
-//           }
-//           setDuplicates(updated);
-//           alert("Deleted successfully");
-//         })
-//         .catch(() => alert("Delete failed"));
-//     }
-//   };
-
-//   if (loading) return <div style={{ padding: spacing.large }}>Loading...</div>;
-//   if (!duplicates) return null;
-
-//   const allLabels = Object.keys(duplicates);
-//   const totalPages = Math.ceil(allLabels.length / ITEMS_PER_PAGE);
-//   const currentLabels = allLabels.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-//   return (
-//     <div style={cardStyles.base}>
-//       <h2 style={cardStyles.title}>Duplicate Concept Labels</h2>
-      
-//       {currentLabels.length === 0 ? (
-//         <p style={{ color: colors.lightText }}>No duplicates found</p>
-//       ) : (
-//         <>
-//           {currentLabels.map(label => (
-//             <div key={label} style={{ marginBottom: spacing.xlarge }}>
-//               <h4 style={{ color: colors.secondary }}>Concept Label: {label}</h4>
-//               <div style={{ overflowX: 'auto' }}>
-//                 <table style={tableStyles.base}>
-//                   <thead>
-//                     <tr style={tableStyles.header}>
-//                       <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Hindi</th>
-//                       <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Sanskrit</th>
-//                       <th style={{ ...tableStyles.cell, ...tableStyles.header }}>English</th>
-//                       <th style={{ ...tableStyles.cell, ...tableStyles.header }}>MRSC</th>
-//                       <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Actions</th>
-//                     </tr>
-//                   </thead>
-//                   <tbody>
-//                     {duplicates[label].map(con => (
-//                       <tr key={con.concept_id} style={tableStyles.row}>
-//                         <td style={tableStyles.cell}>{con.hindi_label}</td>
-//                         <td style={tableStyles.cell}>{con.sanskrit_label}</td>
-//                         <td style={tableStyles.cell}>{con.english_label}</td>
-//                         <td style={tableStyles.cell}>{con.mrsc}</td>
-//                         <td style={tableStyles.cell}>
-//                           <button 
-//                             onClick={() => onEditClick(con.concept_id)}
-//                             style={{ ...buttonStyles.secondary, marginRight: spacing.small }}
-//                           >
-//                             Edit
-//                           </button>
-//                           <button 
-//                             onClick={() => handleDelete(con.concept_id)}
-//                             style={buttonStyles.danger}
-//                           >
-//                             Delete
-//                           </button>
-//                         </td>
-//                       </tr>
-//                     ))}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             </div>
-//           ))}
-
-//           {/* Pagination Controls */}
-//           {totalPages > 1 && (
-//             <div style={{ 
-//               display: 'flex', 
-//               justifyContent: 'center', 
-//               alignItems: 'center',
-//               gap: spacing.medium, 
-//               marginTop: spacing.large 
-//             }}>
-//               <button 
-//                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
-//                 disabled={currentPage === 1}
-//                 style={buttonStyles.primary}
-//               >
-//                 Previous
-//               </button>
-//               <span style={{ color: colors.text }}>
-//                 Page {currentPage} of {totalPages}
-//               </span>
-//               <button 
-//                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
-//                 disabled={currentPage === totalPages}
-//                 style={buttonStyles.primary}
-//               >
-//                 Next
-//               </button>
-//             </div>
-//           )}
-//         </>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default DuplicateList;
-
-
-
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { 
@@ -145,23 +7,36 @@ import {
 
 const ITEMS_PER_PAGE = 5;
 
-const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
+const DuplicateList = ({ 
+  onEditClick, 
+  duplicates, 
+  setDuplicates,
+  currentPage,
+  setCurrentPage
+}) =>  {
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
   const [username, setUsername] = useState('');
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!duplicates) {
-      axios.get('https://canvas.iiit.ac.in/lc/api/concepts/duplicates')
-        .then(res => setDuplicates(res.data))
-        .catch(() => alert("No duplicates found"))
-        .finally(() => setLoading(false));
+      fetchDuplicates();
     } else {
       setLoading(false);
     }
   }, [duplicates, setDuplicates]);
+
+  const fetchDuplicates = () => {
+    setLoading(true);
+    axios.get('https://canvas.iiit.ac.in/lc/api/concepts/duplicates')
+      .then(res => {
+        setDuplicates(res.data);
+      })
+      .catch(() => alert("No duplicates found"))
+      .finally(() => setLoading(false));
+  };
 
   const promptUsername = (id) => {
     setPendingDeleteId(id);
@@ -174,25 +49,46 @@ const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
       return;
     }
 
-    if (window.confirm("Are you sure you want to delete this concept?")) {
-      axios.delete(`https://canvas.iiit.ac.in/lc/api/concepts/delete/${pendingDeleteId}`, {
-        data: { username }
-      })
-        .then(() => {
-          const updated = { ...duplicates };
-          for (let label in updated) {
-            updated[label] = updated[label].filter(con => con.concept_id !== pendingDeleteId);
-            if (updated[label].length === 0) {
-              delete updated[label];
-            }
-          }
-          setDuplicates(updated);
-          alert("Deleted successfully");
-          setUsername('');
-          setShowUsernameModal(false);
-        })
-        .catch(() => alert("Delete failed"));
+    setIsDeleting(true);
+    const originalDuplicates = {...duplicates};
+    const originalPage = currentPage;
+    
+    // Optimistic update
+    const updated = {...duplicates};
+    for (let label in updated) {
+      updated[label] = updated[label].filter(con => con.concept_id !== pendingDeleteId);
+      if (updated[label].length === 0) {
+        delete updated[label];
+      }
     }
+    setDuplicates(updated);
+
+    axios.delete(`https://canvas.iiit.ac.in/lc/api/concepts/delete/${pendingDeleteId}`, {
+      data: { username }
+    })
+      .then(() => {
+        alert("Deleted successfully");
+        // If we're on a page that might now be empty, adjust the page
+        const allLabels = Object.keys(updated);
+        const totalPages = Math.ceil(allLabels.length / ITEMS_PER_PAGE);
+        if (currentPage > totalPages && totalPages > 0) {
+          setCurrentPage(totalPages);
+        }
+        fetchDuplicates().then(() => {
+          // After refetch, restore to original page
+          setCurrentPage(originalPage);
+        });
+      })
+      .catch(() => {
+        alert("Delete failed");
+        // Revert on error
+        setDuplicates(originalDuplicates);
+      })
+      .finally(() => {
+        setIsDeleting(false);
+        setUsername('');
+        setShowUsernameModal(false);
+      });
   };
 
   if (loading) return <div style={{ padding: spacing.large }}>Loading...</div>;
@@ -200,7 +96,10 @@ const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
 
   const allLabels = Object.keys(duplicates);
   const totalPages = Math.ceil(allLabels.length / ITEMS_PER_PAGE);
-  const currentLabels = allLabels.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const currentLabels = allLabels.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE, 
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div style={cardStyles.base}>
@@ -217,6 +116,7 @@ const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
                 <table style={tableStyles.base}>
                   <thead>
                     <tr style={tableStyles.header}>
+                      <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Concept</th>
                       <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Hindi</th>
                       <th style={{ ...tableStyles.cell, ...tableStyles.header }}>Sanskrit</th>
                       <th style={{ ...tableStyles.cell, ...tableStyles.header }}>English</th>
@@ -227,6 +127,7 @@ const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
                   <tbody>
                     {duplicates[label].map(con => (
                       <tr key={con.concept_id} style={tableStyles.row}>
+                        <td style={tableStyles.cell}>{con.concept_label}</td>
                         <td style={tableStyles.cell}>{con.hindi_label}</td>
                         <td style={tableStyles.cell}>{con.sanskrit_label}</td>
                         <td style={tableStyles.cell}>{con.english_label}</td>
@@ -240,6 +141,7 @@ const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
                           </button>
                           <button 
                             onClick={() => promptUsername(con.concept_id)}
+                            disabled={isDeleting}
                             style={buttonStyles.danger}
                           >
                             Delete
@@ -293,9 +195,10 @@ const DuplicateList = ({ onEditClick, duplicates, setDuplicates }) => {
                   </button>
                   <button 
                     onClick={handleDelete}
+                    disabled={isDeleting}
                     style={buttonStyles.primary}
                   >
-                    Confirm
+                    {isDeleting ? 'Deleting...' : 'Confirm'}
                   </button>
                 </div>
               </div>
